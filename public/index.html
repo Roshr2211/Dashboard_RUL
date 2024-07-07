@@ -5,18 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battery RUL Prediction</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .card {
+            max-width: 900px; /* Increased width */
+            margin: 30px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+        }
+        .card-body {
+            padding: 20px; /* Reduced padding for better alignment */
+            display: flex;
+            justify-content: center; /* Center the form and chart */
+            align-items: center;
+            flex-direction: column;
+        }
+        canvas {
+            width: 100%; /* Ensure the chart takes full width of the card */
+            max-width: 800px; /* Limit maximum width of the chart */
+            height: 700px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Battery RUL Prediction</h1>
-    <form id="predictForm">
-        <label for="experiment">Experiment:</label>
-        <input type="text" id="experiment" name="experiment" value="B0005,B0006,B0007">
-        <button type="submit">Predict</button>
-    </form>
-    <div>
-        <canvas id="predictionChart"></canvas>
+    <div class="card">
+        <div class="card-header">
+            <h2>Battery RUL Prediction Chart</h2>
+        </div>
+        <div class="card-body">
+            <form id="predictForm">
+                <label for="experiment">Experiment IDs:</label>
+                <input type="text" id="experiment" name="experiment" value="B0005,B0006,B0007">
+                <button type="submit">Predict</button>
+            </form>
+            <div>
+                <canvas id="predictionChart"></canvas>
+            </div>
+        </div>
     </div>
+
     <script>
+        let myChart = null;
         document.getElementById('predictForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const experiment = document.getElementById('experiment').value.split(',');
@@ -31,18 +66,23 @@
 
             const data = await response.json();
             const ctx = document.getElementById('predictionChart').getContext('2d');
+            if (myChart) {
+                myChart.destroy();
+            }
 
-            new Chart(ctx, {
+            myChart =  new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: Array.from({ length: data.true_values.length }, (_, i) => i + 1),
                     datasets: [
                         {
                             label: 'Predicted',
+                            // borderColor: '#f3545d',
+                            // pointBackgroundColor: 'rgba(243, 84, 93, 0.6)',
                             data: data.predictions,
                             borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            fill: false
+                            borderWidth: 2,
+                            fill: true
                         },
                         {
                             label: 'True',
@@ -54,6 +94,16 @@
                     ]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     scales: {
                         x: {
                             title: {
