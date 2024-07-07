@@ -54,7 +54,7 @@ def to_padded_numpy(l, shape):
     return padded_array
 
 def preprocess_data_to_cycles():
-    path = "Predicting-RUL-for-EV-Battery/"
+    path = "Data/"
     logging.info(f"Looking for .mat files in: {path}")
     files = [f for f in os.listdir(path) if f.endswith('.mat')]
     logging.info(f"Found {len(files)} .mat files: {files}")
