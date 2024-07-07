@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery RUL Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Battery RUL Prediction</h1>
+    <form id="predictForm">
+        <label for="experiment">Experiment:</label>
+        <input type="text" id="experiment" name="experiment" value="B0005,B0006,B0007">
+        <button type="submit">Predict</button>
+    </form>
+    <div>
+        <canvas id="predictionChart"></canvas>
+    </div>
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const experiment = document.getElementById('experiment').value.split(',');
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ experiment })
+            });
+
+            const data = await response.json();
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: data.true_values.length }, (_, i) => i + 1),
+                    datasets: [
+                        {
+                            label: 'Predicted',
+                            data: data.predictions,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            fill: false
+                        },
+                        {
+                            label: 'True',
+                            data: data.true_values,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Cycle'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Capacity'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
