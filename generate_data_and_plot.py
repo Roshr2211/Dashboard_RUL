@@ -172,7 +172,7 @@ def preprocess_data_to_cycles():
 def generate_data(exp):
     Cycles = preprocess_data_to_cycles()
     df_all = pd.DataFrame({})
-    exp_try_out = exp
+    exp_try_out = ['B0005']
 
     for bat in exp_try_out:
         if bat not in Cycles.columns:
@@ -196,6 +196,6 @@ def generate_plot(df):
     plt.savefig('public/plot.png')
 
 if __name__ == "__main__":
-    df = generate_data(exp)
+    df = generate_data()
     print(df.to_json(orient='records'))
     generate_plot(df)
