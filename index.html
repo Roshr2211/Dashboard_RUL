@@ -1,8 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Kaiadmin - Bootstrap 5 Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Data and Plots</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <style>
+      #batteryTable {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f4f4f4;
+      }
+
+      h1, h2 {
+          color: #2c3e50;
+          text-align: center;
+      }
+
+      #batteryTable {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          background-color: white;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      #batteryTable th, #batteryTable td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+      }
+
+      #batteryTable th {
+          background-color: #acdb34;
+          color: rgb(81, 58, 58);
+      }
+
+      #batteryTable tr:hover {
+          background-color: #f5f5f5;
+      }
+
+      .full-data {
+          display: none;
+          position: absolute;
+          background: white;
+          border: 1px solid #ddd;
+          padding: 10px;
+          max-width: 300px;
+          z-index: 1000;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          border-radius: 4px;
+      }
+
+      #capacityPlot {
+          display: block;
+          margin: 0 auto;
+          max-width: 100%;
+          height: auto;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .short-data {
+          cursor: pointer;
+          color: #000304;
+      }
+
+      .short-data:hover {
+          text-decoration: underline;
+      }
+
+      /* DataTables specific styling */
+      .dataTables_wrapper .dataTables_length, 
+      .dataTables_wrapper .dataTables_filter, 
+      .dataTables_wrapper .dataTables_info, 
+      .dataTables_wrapper .dataTables_processing, 
+      .dataTables_wrapper .dataTables_paginate {
+          color: #333;
+      }
+
+      .dataTables_wrapper .dataTables_paginate .paginate_button.current, 
+      .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+          color: white !important;
+          background: #3498db;
+          border-color: #3498db;
+      }
+  </style>
     <meta
       content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
       name="viewport"
@@ -731,7 +821,7 @@
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                          <p class="card-category">Visitors</p>
+                          <p class="card-category">SOH</p>
                           <h4 class="card-title">1,294</h4>
                         </div>
                       </div>
@@ -752,7 +842,7 @@
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                          <p class="card-category">Subscribers</p>
+                          <p class="card-category">SOC</p>
                           <h4 class="card-title">1303</h4>
                         </div>
                       </div>
@@ -773,7 +863,7 @@
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                          <p class="card-category">Sales</p>
+                          <p class="card-category">Total Cycles</p>
                           <h4 class="card-title">$ 1,345</h4>
                         </div>
                       </div>
@@ -794,7 +884,7 @@
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                          <p class="card-category">Order</p>
+                          <p class="card-category">Discharge cycles</p>
                           <h4 class="card-title">576</h4>
                         </div>
                       </div>
@@ -1003,7 +1093,7 @@
                 <div class="card card-round">
                   <div class="card-header">
                     <div class="card-head-row card-tools-still-right">
-                      <h4 class="card-title">Users Geolocation</h4>
+                      <h4 class="card-title">Battery Data</h4>
                       <div class="card-tools">
                         <button
                           class="btn btn-icon btn-link btn-primary btn-xs"
@@ -1028,92 +1118,78 @@
                   </div>
                   <div class="card-body">
                     <div class="row">
-                      <div class="col-md-6">
+                      
                         <div class="table-responsive table-hover table-sales">
-                          <table class="table">
-                            <tbody>
+                          <table id="batteryTable" class="display">
+                            <thead>
                               <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/id.png"
-                                      alt="indonesia"
-                                    />
-                                  </div>
-                                </td>
-                                <td>Indonesia</td>
-                                <td class="text-end">2.320</td>
-                                <td class="text-end">42.18%</td>
+                                  <th>Voltage Measured</th>
+                                  <th>Current Measured</th>
+                                  <th>Temperature Measured</th>
+                                  <th>Current Load</th>
+                                  <th>Voltage Load</th>
+                                  <th>Time</th>
+                                  <th>Capacity</th>
+                                  <th>Ambient Temperatures</th>
+                                  <th>SOC</th>
+                                  <th>SOH</th>
+                                  <th>Cycle Count</th>
+                                  <th>Discharge Number</th>
                               </tr>
-                              <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/us.png"
-                                      alt="united states"
-                                    />
-                                  </div>
-                                </td>
-                                <td>USA</td>
-                                <td class="text-end">240</td>
-                                <td class="text-end">4.36%</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/au.png"
-                                      alt="australia"
-                                    />
-                                  </div>
-                                </td>
-                                <td>Australia</td>
-                                <td class="text-end">119</td>
-                                <td class="text-end">2.16%</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/ru.png"
-                                      alt="russia"
-                                    />
-                                  </div>
-                                </td>
-                                <td>Russia</td>
-                                <td class="text-end">1.081</td>
-                                <td class="text-end">19.65%</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/cn.png"
-                                      alt="china"
-                                    />
-                                  </div>
-                                </td>
-                                <td>China</td>
-                                <td class="text-end">1.100</td>
-                                <td class="text-end">20%</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div class="flag">
-                                    <img
-                                      src="assets/img/flags/br.png"
-                                      alt="brazil"
-                                    />
-                                  </div>
-                                </td>
-                                <td>Brasil</td>
-                                <td class="text-end">640</td>
-                                <td class="text-end">11.63%</td>
-                              </tr>
-                            </tbody>
+                          </thead>
+                          <tbody>
+                              <!-- Data will be populated here by DataTables -->
+                          </tbody>
                           </table>
+                          <script>
+                            $(document).ready(function() {
+                                function renderData(data, type, row) {
+                                    if (type === 'display' && Array.isArray(data) && data.length > 5) {
+                                        var shortData = data.slice(0, 5).join(', ') + '...';
+                                        var fullData = data.join(', ');
+                                        return '<span class="short-data" data-full="' + fullData + '">' + shortData + '</span>';
+                                    }
+                                    return data;
+                                }
+                    
+                                var table = $('#batteryTable').DataTable({
+                                    ajax: {
+                                        url: '/data',
+                                        dataSrc: ''
+                                    },
+                                    columns: [
+                                        { data: 'Voltage_measured', render: renderData },
+                                        { data: 'Current_measured', render: renderData },
+                                        { data: 'Temperature_measured', render: renderData },
+                                        { data: 'Current_load', render: renderData },
+                                        { data: 'Voltage_load', render: renderData },
+                                        { data: 'Time', render: renderData },
+                                        { data: 'Capacity', render: renderData },
+                                        { data: 'ambient_temperatures', render: renderData },
+                                        { data: 'SOC', render: renderData },
+                                        { data: 'SOH', render: renderData },
+                                        { data: 'Cycle_count' },
+                                        { data: 'discharge_number' }
+                                    ],
+                                    pageLength: 15,
+                                    responsive: true
+                                });
+                    
+                                var fullDataPopup = $('<div class="full-data"></div>').appendTo('body');
+                    
+                                $('#batteryTable').on('mouseenter', '.short-data', function(e) {
+                                    var fullData = $(this).data('full');
+                                    fullDataPopup.text(fullData).css({
+                                        left: e.pageX + 10,
+                                        top: e.pageY + 10
+                                    }).show();
+                                }).on('mouseleave', '.short-data', function() {
+                                    fullDataPopup.hide();
+                                });
+                            });
+                        </script>
                         </div>
-                      </div>
+                      
                       <div class="col-md-6">
                         <div class="mapcontainer">
                           <div
