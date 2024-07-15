@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from flask import Flask, request, jsonify
-from generate_data_and_plot import generate_data, generate_plot
+from generate_data_and_plot import generate_data, generate_plot,generate_cycles
 
 # Define TransformerBlock
 @tf.keras.utils.register_keras_serializable()
@@ -314,6 +314,24 @@ def get_data():
     df = generate_data(experiment)
     return jsonify(df.to_dict(orient='records'))
 
+@app.route('/getCycleCount', methods=['POST'])
+def get_cycle_count():
+    app.logger.info(f"Received request: {request.json}")
+    try:
+        experiment = request.json.get('experiment')
+        if not experiment:
+            app.logger.error("No experiment provided")
+            return jsonify({"error": "No experiment provided"}), 400
+        
+        app.logger.info(f"Generating cycles for experiment: {experiment}")
+        cycles = generate_cycles(experiment)
+        app.logger.info(f"Generated cycles: {cycles}")
+        
+        return jsonify(cycles)
+    except Exception as e:
+        app.logger.error(f"Error in get_cycle_count: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -324,4 +342,4 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

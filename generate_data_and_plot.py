@@ -190,6 +190,28 @@ def generate_data(exp):
 
     df = df_all.reset_index(drop=True)
     return df
+
+def generate_cycles(exp):
+    print(f"Generating cycles for experiment: {exp}")
+    df = generate_data(exp)
+    print(f"Generated data shape: {df.shape}")
+    if df.empty:
+        print(f"No data found for experiment {exp}")
+        return {"error": f"No data found for experiment {exp}"}
+    
+    final_cycle_count = df['Cycle_count'].iloc[-1]
+    print(f"Final cycle count: {final_cycle_count}")
+    
+    result = json.loads(df.to_json(orient='records'))
+    result.append({"final_cycle_count": int(final_cycle_count)})
+    
+    print(f"Returning result with {len(result)} records")
+    return result
+     # This should now be a list of dicts, which is JSON-serializable
+
+
+
+
 # def generate_data(exp):
 #     path = "Data/"
 #     file = f"{exp}.mat"

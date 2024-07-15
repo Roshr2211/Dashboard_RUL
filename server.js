@@ -4,6 +4,8 @@ const axios = require('axios');
 const { spawn } = require('child_process');
 const app = express();
 const port = 3000;
+const cors = require('cors');
+app.use(cors());
 
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
@@ -62,6 +64,20 @@ app.post('/data', (req, res) => {
         }
     });
 });
+
+app.post('/getCycleCount', async (req, res) => {
+    console.log('Received request for /getCycleCount:', req.body);
+    try {
+        console.log('Sending request to Flask server...');
+        const response = await axios.post(`${flaskServerUrl}/getCycleCount`, req.body);
+        console.log('Received response from Flask server:', response.data);
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error in /getCycleCount route:', error.response?.data || error.message);
+        handleAxiosError(error, res);
+    }
+});
+
 function handleAxiosError(error, res) {
     console.error('Error from Flask server:', error.response?.data || error.message);
     if (error.response) {

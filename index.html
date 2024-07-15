@@ -817,7 +817,7 @@
                         <div
                           class="icon-big text-center icon-primary bubble-shadow-small"
                         >
-                          <i class="fas fa-users"></i>
+                          <i class="fas fa-battery-half"></i>
                         </div>
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
@@ -836,9 +836,9 @@
                     <div class="row align-items-center">
                       <div class="col-icon">
                         <div
-                          class="icon-big text-center icon-info bubble-shadow-small"
+                          class="icon-big text-center icon-danger bubble-shadow-small"
                         >
-                          <i class="fas fa-user-check"></i>
+                          <i class="fas fa-hourglass-half"></i>
                         </div>
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
@@ -859,14 +859,47 @@
                         <div
                           class="icon-big text-center icon-success bubble-shadow-small"
                         >
-                          <i class="fas fa-luggage-cart"></i>
+                          <i class="fas fa-moon"></i>
                         </div>
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
                           <p class="card-category">Total Cycles</p>
-                          <h4 class="card-title">$ 1,345</h4>
+                          <h4 class="card-title" id="cycle-count">Loading ...</h4>
                         </div>
+                        <script>
+                          document.addEventListener('DOMContentLoaded', function() {
+                          document.getElementById('predictForm').addEventListener('submit', function(event) {
+                              event.preventDefault(); // Prevent the form from submitting the traditional way
+
+                            const experiment = document.getElementById('experiment').value;
+
+                            fetch('/getCycleCount', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({ experiment: experiment })
+                            })
+                              .then(response => response.json())
+                              .then(data => {
+                                console.log('Received data:', data);
+                                if (data.length > 0 && data[data.length - 1].final_cycle_count) {
+                                  const cycleCount = data[data.length - 1].final_cycle_count;
+                                  document.getElementById('cycle-count').innerText = cycleCount;
+                                } else {
+                                  console.error('Unexpected data format:', data);
+                                  document.getElementById('cycle-count').innerText = "Error";
+                                }
+                              })
+                              .catch(error => {
+                                console.error('Error fetching data:', error);
+                                document.getElementById('cycle-count').innerText = "Error";
+                              });
+                          });
+                          });
+                      </script>
+                        
                       </div>
                     </div>
                   </div>
@@ -880,7 +913,7 @@
                         <div
                           class="icon-big text-center icon-secondary bubble-shadow-small"
                         >
-                          <i class="far fa-check-circle"></i>
+                          <i class="fas fa-charging-station"></i>
                         </div>
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
