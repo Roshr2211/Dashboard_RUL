@@ -19,33 +19,49 @@ app.post('/predict', async (req, res) => {
     }
 });
 
-app.get('/data', (req, res) => {
-    // Spawn a child process to run the Python script and get the data
-    const pythonProcess = spawn('python', ['generate_data_and_plot.py']);
+app.post('/data', (req, res) => {
+    const experiment = req.body.experiment;
+    if (!experiment) {
+        console.error("Missing 'experiment' in request data");
+        return res.status(400).json({ error: "Missing 'experiment' in request data" });
+    }
+
+    console.log(`Processing experiment: ${experiment}`);
+
+    const pythonProcess = spawn('python', ['generate_data_and_plot.py', experiment]);
 
     let dataString = '';
+    let errorString = '';
 
     pythonProcess.stdout.on('data', (data) => {
         dataString += data.toString();
     });
 
     pythonProcess.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
+        errorString += data.toString();
+        console.error(`Python stderr: ${data}`);
     });
 
     pythonProcess.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
+        console.log(`Python process exited with code ${code}`);
+        if (code !== 0) {
+            console.error(`Python script error: ${errorString}`);
+            return res.status(500).json({ error: 'Error in Python script', details: errorString });
+        }
         try {
             const jsonData = JSON.parse(dataString);
-            res.json(jsonData);
+            if (jsonData.error) {
+                console.error(`Error in Python script: ${jsonData.error}`);
+                return res.status(400).json(jsonData);
+            }
+            res.json(jsonData.result);
         } catch (error) {
             console.error('Error parsing JSON:', error);
             console.log('Received data:', dataString);
-            res.status(500).json({ error: 'Error parsing data from Python script' });
+            res.status(500).json({ error: 'Error parsing data from Python script', details: dataString });
         }
     });
 });
-
 function handleAxiosError(error, res) {
     console.error('Error from Flask server:', error.response?.data || error.message);
     if (error.response) {

@@ -8,6 +8,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from flask import Flask, request, jsonify
+from generate_data_and_plot import generate_data, generate_plot
 
 # Define TransformerBlock
 @tf.keras.utils.register_keras_serializable()
@@ -273,65 +274,7 @@ def get_exp_based_df(exp):
 def home():
     return "RUL Prediction API is running"
 
-# @app.route('/predict', methods=['POST'])
-# def predict():
-    # data = request.get_json()
-    # experiment = data['experiment']
-    # df_x, df_y = get_exp_based_df(experiment)
-    
-    # # Normalize the data
-    # scaler = StandardScaler()
-    # df_x = scaler.fit_transform(df_x.reshape(-1, df_x.shape[-1])).reshape(df_x.shape)
-    
-    # predictions = model.predict(df_x)
-    
-    # return jsonify(predictions=predictions.flatten().tolist(), true_values=df_y.tolist())
 
-# @app.route('/data', methods=['POST'])
-# def generate_data():
-#     logging.info("Starting data generation process")
-#     try:
-#         Cycles = preprocess_data_to_cycles()
-#         logging.info(f"Preprocessed data. Cycles DataFrame shape: {Cycles.shape}")
-
-#         df_all = pd.DataFrame({})
-#         exp_try_out = ['B0005']
-#         logging.info(f"Generating data for experiments: {exp_try_out}")
-
-#         for bat in exp_try_out:
-#             if bat not in Cycles.columns:
-#                 logging.warning(f"Battery {bat} not found in Cycles DataFrame")
-#                 continue
-
-#             df = pd.DataFrame({})
-#             cols = ['Voltage_measured', 'Current_measured', 'Temperature_measured', 'Current_load', 'Voltage_load', 'Time', 'Capacity', 'ambient_temperatures', 'SOC', 'SOH', 'Cycle_count', 'discharge_number']
-#             for col in cols:
-#                 if col not in Cycles[bat]:
-#                     logging.warning(f"Column {col} not found for battery {bat}")
-#                     continue
-#                 df[col] = Cycles[bat][col]
-            
-#             logging.info(f"Generated data for battery {bat}. Shape: {df.shape}")
-#             df_all = pd.concat([df_all, df], ignore_index=True)
-
-#         df = df_all.reset_index(drop=True)
-#         logging.info(f"Final DataFrame shape: {df.shape}")
-
-#         # Convert DataFrame to JSON
-#         json_data = df.to_json(orient='records')
-        
-#         logging.info("Data generation completed successfully")
-#         return jsonify({"data": json_data})
-
-#     except Exception as e:
-#         logging.error(f"Error in generate_data: {str(e)}", exc_info=True)
-#         return jsonify({"error": "An error occurred during data generation"}), 500
-# def generate_plot(df):
-#     plt.plot(df['Cycle_count'], df['Capacity'])
-#     plt.xlabel('Cycle Count')
-#     plt.ylabel('Capacity')
-#     plt.title('Capacity vs. Cycle Count')
-#     plt.savefig('plot.png')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -365,6 +308,12 @@ def predict():
     except Exception as e:
         logging.error(f"Unexpected error in prediction: {e}", exc_info=True)
         return jsonify(error="An unexpected error occurred. Please check the logs for more information."), 500
+
+def get_data():
+    experiment = request.args.get('experiment', 'B0005')  # Default to 'B0005' if not provided
+    df = generate_data(experiment)
+    return jsonify(df.to_dict(orient='records'))
+
 
 if __name__ == "__main__":
     logging.basicConfig(
