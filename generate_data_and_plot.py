@@ -173,36 +173,54 @@ def preprocess_data_to_cycles():
 
     return Cycles
 def generate_data(exp):
-    path = "Data/"
-    file = f"{exp}.mat"
-    file_path = os.path.join(path, file)
-    
-    if not os.path.exists(file_path):
-        print(f"Battery {exp} not found")
-        return pd.DataFrame()
+    Cycles = preprocess_data_to_cycles()
+    df_all = pd.DataFrame({})
+    exp_try_out = {exp}
 
-    data = loadmat(file_path)
-    x = data[exp]["cycle"][0][0][0]
-    
-    types = x['type']
-    ambient_temperatures = list(map(lambda y: y[0][0], x['ambient_temperature']))
-    datas = x['data']
+    for bat in exp_try_out:
+        if bat not in Cycles.columns:
+            print(f"Battery {bat} not found in Cycles DataFrame")
+            continue
 
-    df = pd.DataFrame()
-    cols = ['Voltage_measured', 'Current_measured', 'Temperature_measured', 'Current_load', 'Voltage_load', 'Time', 'Capacity']
-    
-    for col in cols:
-        df[col] = [datas[j][col][0][0][0] for j in range(datas.size) if types[j] == 'discharge']
+        df = pd.DataFrame({})
+        cols = ['Voltage_measured', 'Current_measured', 'Temperature_measured', 'Current_load', 'Voltage_load', 'Time', 'Capacity', 'ambient_temperatures', 'SOC', 'SOH', 'Cycle_count', 'discharge_number']
+        for col in cols:
+            df[col] = Cycles[bat][col]
+        df_all = pd.concat([df_all, df], ignore_index=True)
 
-    df['ambient_temperatures'] = [ambient_temperatures[j] for j in range(datas.size) if types[j] == 'discharge']
-    df['Cycle_count'] = range(1, len(df) + 1)
-    df['discharge_number'] = range(1, len(df) + 1)
-
-    initial_capacity = df['Capacity'].iloc[0]
-    df['SOC'] = df.apply(lambda row: calculate_soc(row['Current_measured'], row['Time'], initial_capacity), axis=1)
-    df['SOH'] = df['Capacity'] / initial_capacity
-
+    df = df_all.reset_index(drop=True)
     return df
+# def generate_data(exp):
+#     path = "Data/"
+#     file = f"{exp}.mat"
+#     file_path = os.path.join(path, file)
+    
+#     if not os.path.exists(file_path):
+#         print(f"Battery {exp} not found")
+#         return pd.DataFrame()
+
+#     data = loadmat(file_path)
+#     x = data[exp]["cycle"][0][0][0]
+    
+#     types = x['type']
+#     ambient_temperatures = list(map(lambda y: y[0][0], x['ambient_temperature']))
+#     datas = x['data']
+
+#     df = pd.DataFrame()
+#     cols = ['Voltage_measured', 'Current_measured', 'Temperature_measured', 'Current_load', 'Voltage_load', 'Time', 'Capacity']
+    
+#     for col in cols:
+#         df[col] = [datas[j][col][0][0][0] for j in range(datas.size) if types[j] == 'discharge']
+
+#     df['ambient_temperatures'] = [ambient_temperatures[j] for j in range(datas.size) if types[j] == 'discharge']
+#     df['Cycle_count'] = range(1, len(df) + 1)
+#     df['discharge_number'] = range(1, len(df) + 1)
+
+#     initial_capacity = df['Capacity'].iloc[0]
+#     df['SOC'] = df.apply(lambda row: calculate_soc(row['Current_measured'], row['Time'], initial_capacity), axis=1)
+#     df['SOH'] = df['Capacity'] / initial_capacity
+
+#     return df
 
 def generate_plot(df):
     plt.plot(df['Cycle_count'], df['Capacity'])
