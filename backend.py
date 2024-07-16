@@ -347,8 +347,7 @@ def get_discharge_cycle_count():
             return jsonify({"error": "No experiment provided"}), 400
         
         app.logger.info(f"Generating cycles for experiment: {experiment}")
-        cycles = generate_discharge_cycles(experiment)
-        print("hello")
+        cycles = generate_discharge_cycles(experiment)        
         app.logger.info(f"Generated cycles: {cycles}")
         
         return jsonify(cycles)
@@ -357,6 +356,32 @@ def get_discharge_cycle_count():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/plot', methods=['POST'])
+def plot():
+    try:
+        data = request.get_json()
+        logging.debug(f"Received data: {data}")
+
+        experiment = data.get('experiment')
+        if not experiment:
+            raise ValueError("Missing 'experiment' in request data")
+
+        logging.info(f"Processing experiment: {experiment}")
+        df = generate_data(experiment[0])  # Assuming experiment is a list with one element
+        df_x, df_y = generate_plot(df)
+
+        logging.info(f"Data shape after processing - df_x: {len(df_x)}, df_y: {len(df_y)}")
+        
+        response = jsonify(df_x=df_x, df_y=df_y)
+        logging.debug(f"Response: {response}")
+
+        return response
+    except ValueError as ve:
+        logging.error(f"ValueError in prediction: {ve}")
+        return jsonify(error=str(ve)), 400
+    except Exception as e:
+        logging.error(f"Unexpected error in prediction: {e}", exc_info=True)
+        return jsonify(error="An unexpected error occurred. Please check the logs for more information."), 500
 
 if __name__ == "__main__":
     logging.basicConfig(
