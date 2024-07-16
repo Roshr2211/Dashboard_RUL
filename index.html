@@ -1011,8 +1011,8 @@
                   </div>
                   <div class="card-body">
                     <div class="chart-container" style="min-height: 375px; min-width: 500px">
-                      <canvas id="predictionChart"></canvas>
-                      <script>
+                      <canvas id="CycleChart"></canvas>
+                      <!-- <script>
                         let myChart = null;
                         document.getElementById('predictForm').addEventListener('submit', async (event) => {
                           event.preventDefault();
@@ -1105,14 +1105,14 @@
                             }
                           });
                         });
-                      </script>
+                      </script> -->
                     </div>
                     <div id="myChartLegend"></div>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
-                <div class="card card-primary card-round">
+                <div class="card card-me card-round">
                   <div class="card-header">
                     <div class="card-head-row">
                       <div class="card-title">Daily Sales</div>
@@ -1148,10 +1148,210 @@
                       hello
                     </div>
                     <div class="pull-in">
-                      <canvas id="dailySalesChart"></canvas>
+                      <canvas id="predictionChart"></canvas>
+                      <!-- <script>
+                        let Chart = null;
+                        document.getElementById('predictForm').addEventListener('submit', async (event) => {
+                          event.preventDefault();
+                          const experiment = document.getElementById('experiment').value.split(',');
+                  
+                          const response = await fetch('/plot', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ experiment })
+                          });
+                  
+                          const data = await response.json();
+                          const rtx = document.getElementById('CycleChart').getContext('2d');
+                          if (Chart) {
+                            myChart.destroy();
+                          }
+                  
+                          myChart = new Chart(rtx, {
+                            type: 'line',
+                data: {
+                    labels: data.df_x,
+                    datasets: [{
+                        label: 'Capacity',
+                        data: data.df_y,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Cycle Count'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Capacity'
+                            }
+                              }
+                            }
+                          }
+                          });
+                        });
+                      </script> -->
                     </div>
                   </div>
                 </div>
+                <script>
+                  let predictionChart = null;
+                  let cycleChart = null;
+                
+                  document.getElementById('predictForm').addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    const experiment = document.getElementById('experiment').value.split(',');
+
+                    const plotResponse = await fetch('/plot', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ experiment })
+                    });
+                
+                    const plotData = await plotResponse.json();
+                    updateCycleChart(plotData);
+                
+                    // Fetch prediction data
+                    const predictionResponse = await fetch('/predict', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ experiment })
+                    });
+                
+                    const predictionData = await predictionResponse.json();
+                    updatePredictionChart(predictionData);
+                
+                    // Fetch plot data
+                    
+                  });
+                
+                  function updatePredictionChart(data) {
+                    const ctx = document.getElementById('predictionChart').getContext('2d');
+                    if (predictionChart) {
+                      predictionChart.destroy();
+                    }
+                
+                    predictionChart = new Chart(ctx, {
+                      type: 'line',
+                      data: {
+                        labels: Array.from({ length: data.true_values.length }, (_, i) => i + 1),
+                        datasets: [
+                          {
+                            label: 'Predicted',
+                            data: data.predictions,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderWidth: 2,
+                            fill: true
+                          },
+                          {
+                            label: 'True',
+                            data: data.true_values,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            fill: false
+                          }
+                        ]
+                      },
+                      options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: true,
+                            position: 'top'
+                          },
+                          tooltip: {
+                            mode: 'index',
+                            intersect: false
+                          }
+                        },
+                        scales: {
+                          x: {
+                            display: true,
+                            title: {
+                              display: true,
+                              text: 'Cycle',
+                              color: 'black',
+                              font: {
+                                size: 19,
+                                weight: 'bold'
+                              }
+                            },
+                            ticks: {
+                              color: 'black'
+                            }
+                          },
+                          y: {
+                            display: true,
+                            title: {
+                              display: true,
+                              text: 'Capacity',
+                              color: 'black',
+                              font: {
+                                size: 14,
+                                weight: 'bold'
+                              }
+                            },
+                            ticks: {
+                              color: 'black'
+                            }
+                          }
+                        }
+                      }
+                    });
+                  }
+                
+                  function updateCycleChart(data) {
+                    const rtx = document.getElementById('CycleChart').getContext('2d');
+                    if (cycleChart) {
+                      cycleChart.destroy();
+                    }
+                
+                    cycleChart = new Chart(rtx, {
+                      type: 'line',
+                      data: {
+                        labels: data.df_x,
+                        datasets: [{
+                          label: 'Capacity',
+                          data: data.df_y,
+                          borderColor: 'rgb(75, 192, 192)',
+                          tension: 0.1
+                        }]
+                      },
+                      options: {
+                        responsive: true,
+                        scales: {
+                          x: {
+                            title: {
+                              display: true,
+                              text: 'Cycle Count'
+                            }
+                          },
+                          y: {
+                            title: {
+                              display: true,
+                              text: 'Capacity'
+                            }
+                          }
+                        }
+                      }
+                    });
+                  }
+                </script>
                 <div class="card card-round">
                   <div class="card-body pb-0">
                     <div class="h1 fw-bold float-end text-primary">+5%</div>
