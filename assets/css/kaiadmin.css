@@ -1764,7 +1764,7 @@ label {
   .card-stats .icon-big.icon-warning {
     background: #FFAD46; }
   .card-stats .icon-big.icon-info {
-    background: #f74848; }
+    background: #48ABF7; }
   .card-stats .icon-big.icon-danger {
     background: #F25961; }
   .card-stats .icon-big.round {
@@ -1841,6 +1841,8 @@ label {
 
 .card-danger {
   background: #F25961 !important; }
+.card-me {
+    background: #fdfcfc !important; }
 
 .card-round {
   border-radius: 10px; }
