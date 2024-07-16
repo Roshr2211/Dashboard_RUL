@@ -91,6 +91,16 @@ app.post('/getDischargeCount', async (req, res) => {
     }
 });
 
+app.post('/plot', async (req, res) => {
+    try {
+        const response = await axios.post(`${flaskServerUrl}/plot`, req.body);
+        res.json(response.data);
+    } catch (error) {
+        handleAxiosError(error, res);
+    }
+});
+
+
 function handleAxiosError(error, res) {
     console.error('Error from Flask server:', error.response?.data || error.message);
     if (error.response) {
