@@ -918,10 +918,51 @@
                       </div>
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                          <p class="card-category">Discharge cycles</p>
-                          <h4 class="card-title">576</h4>
+                            <p class="card-category">Discharge cycles</p>
+                            <h4 class="card-title" id="discharge-count">Loading...</h4>
                         </div>
-                      </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                document.getElementById('predictForm').addEventListener('submit', function(event) {
+                                    event.preventDefault(); // Prevent the form from submitting the traditional way
+                    
+                                    const experiment = document.getElementById('experiment').value;
+                    
+                                    fetch('/getDischargeCount', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ experiment: experiment })
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error('Network response was not ok ' + response.statusText);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        console.log('Received data:', data);
+                                        if (Array.isArray(data) && data.length > 0 && data[data.length - 1].discharge_cycle_count !== undefined) {
+                                            const cycleCount = data[data.length - 1].discharge_cycle_count;
+                                            document.getElementById('discharge-count').innerText = cycleCount;
+                                        } else if (data.error) {
+                                            console.error('Error:', data.error);
+                                            document.getElementById('discharge-count').innerText = "Error: " + data.error;
+                                        } else {
+                                            console.error('Unexpected data format:', data);
+                                            document.getElementById('discharge-count').innerText = "Error: Unexpected data format";
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching data:', error);
+                                        document.getElementById('discharge-count').innerText = "Error: Fetch error";
+                                    });
+                                });
+                            });
+                        </script>
+                    </div>
+                    
                     </div>
                   </div>
                 </div>

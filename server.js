@@ -70,11 +70,24 @@ app.post('/getCycleCount', async (req, res) => {
     try {
         console.log('Sending request to Flask server...');
         const response = await axios.post(`${flaskServerUrl}/getCycleCount`, req.body);
-        console.log('Received response from Flask server:', response.data);
+        // console.log('Received response from Flask server:', response.data);
         res.json(response.data);
     } catch (error) {
         console.error('Error in /getCycleCount route:', error.response?.data || error.message);
         handleAxiosError(error, res);
+    }
+});
+
+app.post('/getDischargeCount', async (req, res) => {
+    console.log('Received request for /getDischargeCount:', req.body);
+    try {
+        console.log('Sending request to Flask server...');
+        const response = await axios.post(`${flaskServerUrl}/getDischargeCount`, req.body);
+        // console.log('Received response from Flask server:', response.data);
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error in /getDischargeCount route:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to fetch data from Flask server' });
     }
 });
 

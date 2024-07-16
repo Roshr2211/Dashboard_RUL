@@ -8,8 +8,12 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from flask import Flask, request, jsonify
-from generate_data_and_plot import generate_data, generate_plot,generate_cycles
+from generate_data_and_plot import generate_data, generate_plot,generate_cycles,generate_discharge_cycles
 
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
 # Define TransformerBlock
 @tf.keras.utils.register_keras_serializable()
 class TransformerBlock(layers.Layer):
@@ -32,7 +36,7 @@ class TransformerBlock(layers.Layer):
         ffn_output = self.dropout2(ffn_output, training=training)
         return self.layernorm2(out1 + ffn_output)
 
-app = Flask(__name__)
+# app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 # Register the MSE loss function
@@ -331,6 +335,27 @@ def get_cycle_count():
     except Exception as e:
         app.logger.error(f"Error in get_cycle_count: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/getDischargeCount', methods=['POST'])
+def get_discharge_cycle_count():
+    app.logger.info(f"Received request: {request.json}")
+    try:
+        experiment = request.json.get('experiment')
+        if not experiment:
+            app.logger.error("No experiment provided")
+            return jsonify({"error": "No experiment provided"}), 400
+        
+        app.logger.info(f"Generating cycles for experiment: {experiment}")
+        cycles = generate_discharge_cycles(experiment)
+        print("hello")
+        app.logger.info(f"Generated cycles: {cycles}")
+        
+        return jsonify(cycles)
+    except Exception as e:
+        app.logger.error(f"Error in get_discharge_cycle_count: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":

@@ -200,7 +200,9 @@ def generate_cycles(exp):
         return {"error": f"No data found for experiment {exp}"}
     
     final_cycle_count = df['Cycle_count'].iloc[-1]
+    # discharge_cycle_count = df['discharge_number'].iloc[-1]
     print(f"Final cycle count: {final_cycle_count}")
+    # print(f"Discharge cycle count: {discharge_cycle_count}")
     
     result = json.loads(df.to_json(orient='records'))
     result.append({"final_cycle_count": int(final_cycle_count)})
@@ -209,6 +211,20 @@ def generate_cycles(exp):
     return result
      # This should now be a list of dicts, which is JSON-serializable
 
+def generate_discharge_cycles(exp):
+    print(f"Generating discharge cycles for experiment: {exp}")
+    df = generate_data(exp)
+    print(f"Generated discharge data shape: {df.shape}")
+    if df.empty:
+        print(f"No data found for experiment {exp}")
+        return {"error": f"No data found for experiment {exp}"}
+    
+    discharge_cycle_count = df['discharge_number'].iloc[-1]
+    result = json.loads(df.to_json(orient='records'))
+    result.append({"discharge_cycle_count": int(discharge_cycle_count)})
+    
+    print(f"Returning result with {len(result)} records")
+    return result
 
 
 
