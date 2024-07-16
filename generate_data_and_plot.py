@@ -261,11 +261,14 @@ def generate_discharge_cycles(exp):
 #     return df
 
 def generate_plot(df):
-    plt.plot(df['Cycle_count'], df['Capacity'])
-    plt.xlabel('Cycle Count')
-    plt.ylabel('Capacity')
-    plt.title('Capacity vs. Cycle Count')
-    plt.savefig('public/plot.png')
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(df['Cycle_count'], df['Capacity'])
+    # plt.xlabel('Cycle Count')
+    # plt.ylabel('Capacity')
+    # plt.title('Capacity vs. Cycle Count')
+    # plt.savefig('public/plot.png')
+    # plt.close()
+    return df['Cycle_count'].tolist(), df['Capacity'].tolist()
 
 logging.basicConfig(level=logging.DEBUG, filename='python_script.log')
 
