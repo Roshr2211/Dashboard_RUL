@@ -1414,7 +1414,7 @@
   function updateCycleChart(data) {
     const rtx = document.getElementById('CycleChart').getContext('2d');
     if (cycleChart) {
-      cycleChart.destroy();
+        cycleChart.destroy();
     }
 
     // Calculate 80% of initial capacity
@@ -1422,77 +1422,72 @@
     const capacityThreshold = initialCapacity * 0.8;
 
     // Find the cycle count where capacity drops below 80%
-    let thresholdCycle = data.df_x[data.df_x.length - 1]; // Default to last cycle if threshold not reached
+    let thresholdCycle = data.df_x[data.df_x.length - 1];
     for (let i = 0; i < data.df_y.length; i++) {
-      if (data.df_y[i] <= capacityThreshold) {
-        thresholdCycle = data.df_x[i];
-        break;
-      }
+        if (data.df_y[i] <= capacityThreshold) {
+            thresholdCycle = data.df_x[i];
+            break;
+        }
     }
 
     cycleChart = new Chart(rtx, {
-      type: 'line',
-      data: {
-        labels: data.df_x,
-        datasets: [{
-          label: 'Capacity',
-          data: data.df_y,
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Cycle Count'
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Capacity'
-            }
-          }
-        },
-        plugins: {
-          annotation: {
-            annotations: {
-              line1: {
-                type: 'line',
-                xMin: thresholdCycle,
-                xMax: thresholdCycle,
-                borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 2,
-              },
-              point1: {
-                type: 'point',
-                xValue: thresholdCycle,
-                yValue: capacityThreshold,
-                backgroundColor: 'rgb(255, 99, 132)'
-              }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              afterBody: (context) => {
-                if (context[0].parsed.x === thresholdCycle) {
-                  return `80% capacity reached at cycle ${thresholdCycle}`;
+        type: 'line',
+        data: {
+            labels: data.df_x,
+            datasets: [
+                {
+                    label: 'Capacity',
+                    data: data.df_y,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                },
+                {
+                    label: '80% Threshold',
+                    data: [{x: thresholdCycle, y: capacityThreshold}],
+                    pointBackgroundColor: 'rgb(255, 99, 132)',
+                    pointBorderColor: 'rgb(255, 99, 132)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    showLine: false
                 }
-              }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Cycle Count'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Capacity'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            if (context.datasetIndex === 1) {
+                                return `80% capacity reached at cycle ${thresholdCycle}`;
+                            }
+                            return `Capacity: ${context.parsed.y}`;
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     });
 
     // Update the threshold info
     document.getElementById('thresholdInfo').textContent = `Capacity reached 80% of initial value at cycle ${thresholdCycle}`;
-  }
-
-  document.getElementById('predictForm').addEventListener('submit', async (event) => {
+}
+  
+document.getElementById('predictForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const experiment = document.getElementById('experiment').value.split(',');
 
