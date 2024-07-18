@@ -827,7 +827,7 @@
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
                           <p class="card-category">SOH</p>
-                          <h4 class="card-title">1,294</h4>
+                          <h4 class="card-title">Loading...</h4>
                         </div>
                       </div>
                     </div>
@@ -848,7 +848,7 @@
                       <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
                           <p class="card-category">SOC</p>
-                          <h4 class="card-title">1303</h4>
+                          <h4 class="card-title">1</h4>
                         </div>
                       </div>
                     </div>
@@ -1029,7 +1029,12 @@
                       </div>
                     </div>
                     <div class="card-category">
-                      <div id="thresholdInfo"></div>
+                      <div id="thresholdInfo" style="color: #000304; .extra-bold {
+                        font-weight: 900; /* You can adjust the value as needed */
+                        font-size: 1.2em; /* Optional: Increase the font size for more emphasis */
+                        color: #000; /* Optional: Change the color for more visibility */
+                    }
+                    "></div>
                     </div>
                   </div>
                   <div class="card-body">
@@ -1485,8 +1490,8 @@
     });
 
     // Update the threshold info
-    document.getElementById('thresholdInfo').textContent = `Capacity reached 80% of initial value at cycle ${thresholdCycle}`;
-}
+    document.getElementById('thresholdInfo').innerHTML = `Capacity reached 80% of initial value at cycle <strong class="extra-bold">${thresholdCycle}</strong>`;
+  }
   
 document.getElementById('predictForm').addEventListener('submit', async (event) => {
     event.preventDefault();
