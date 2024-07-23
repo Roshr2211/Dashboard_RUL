@@ -6,6 +6,7 @@ from scipy.io import loadmat
 import logging
 import json
 import sys
+import datetime
 def to_padded_numpy(l, shape):
     padded_array = np.zeros(shape)
     padded_array[:len(l)] = l
@@ -191,6 +192,10 @@ def generate_data(exp):
     df = df_all.reset_index(drop=True)
     return df
 
+
+
+
+
 def generate_cycles(exp):
     print(f"Generating cycles for experiment: {exp}")
     df = generate_data(exp)
@@ -268,7 +273,7 @@ def generate_plot(df):
     # plt.title('Capacity vs. Cycle Count')
     # plt.savefig('public/plot.png')
     # plt.close()
-    return df['Cycle_count'].tolist(), df['Capacity'].tolist()
+    return df['discharge_number'].tolist(), df['Capacity'].tolist()
 
 logging.basicConfig(level=logging.DEBUG, filename='python_script.log')
 
