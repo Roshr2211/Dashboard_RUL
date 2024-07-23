@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from flask import Flask, request, jsonify
 from generate_data_and_plot import generate_data, generate_plot,generate_cycles,generate_discharge_cycles
-
+from real_time import get_thingspeak_data, preprocess_thingspeak_data
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -152,72 +153,7 @@ def preprocess_data_to_cycles():
     return Cycles
 
 
-# def preprocess_data_to_cycles():
-#     path = "Data/"
-#     logging.info(f"Looking for .mat files in: {path}")
-#     files = [f for f in os.listdir(path) if f.endswith('.mat')]
-#     logging.info(f"Found {len(files)} .mat files: {files}")
-    
-#     dis_mat = [os.path.join(path, f) for f in files]
-#     battery_grp = {}
 
-#     for f in files:
-#         key = f.split('.')[0]
-#         battery_grp[key] = key
-
-#     bs = [f.split('.')[0] for f in files]
-#     logging.info(f"Processed battery names: {bs}")
-
-#     ds = []
-#     for f in dis_mat:
-#         ds.append(loadmat(f))
-
-#     types = []
-#     times = []
-#     ambient_temperatures = []
-#     datas = []
-
-#     for i in range(len(ds)):
-#         x = ds[i][bs[i]]["cycle"][0][0][0]
-#         ambient_temperatures.append(list(map(lambda y: y[0][0], x['ambient_temperature'])))
-#         types.append(x['type'])
-#         times.append(x['time'])
-#         datas.append(x['data'])
-
-#     batteries = []
-#     cycles = []
-#     for i in range(len(ds)):
-#         batteries.append(bs[i])
-#         cycles.append(datas[i].size)
-
-#     battery_cycle_df = pd.DataFrame({'Battery': batteries, 'Cycle': cycles}).sort_values('Battery', ascending=True)
-#     battery_cycle_df.drop_duplicates(inplace=True)
-
-#     Cycles = {}
-#     params = ['Voltage_measured', 'Current_measured', 'Temperature_measured', 'Current_load', 'Voltage_load', 'Time', 'Capacity']
-
-#     for i in range(len(bs)):
-#         Cycles[bs[i]] = {}
-#         Cycles[bs[i]]['count'] = 0
-#         for param in params:
-#             Cycles[bs[i]][param] = []
-#             for j in range(datas[i].size):
-#                 if types[i][j] == 'discharge':
-#                     Cycles[bs[i]][param].append(datas[i][j][param][0][0][0])
-
-#         cap = []
-#         amb_temp = []
-#         for j in range(datas[i].size):
-#             if types[i][j] == 'discharge':
-#                 cap.append(datas[i][j]['Capacity'][0][0][0])
-#                 amb_temp.append(ambient_temperatures[i][j])
-
-#         Cycles[bs[i]]['Capacity'] = np.array(cap)
-#         Cycles[bs[i]]['ambient_temperatures'] = np.array(amb_temp)
-
-#     Cycles = pd.DataFrame(Cycles)
-#     logging.info(f"Cycles DataFrame columns: {Cycles.columns}")
-#     return Cycles
 
 def get_exp_based_df(exp):
     Cycles = preprocess_data_to_cycles()
@@ -383,6 +319,19 @@ def plot():
         logging.error(f"Unexpected error in prediction: {e}", exc_info=True)
         return jsonify(error="An unexpected error occurred. Please check the logs for more information."), 500
 
+# if __name__ == "__main__":
+#     logging.basicConfig(
+#         level=logging.DEBUG,
+#         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#         handlers=[
+#             logging.FileHandler("debug.log"),
+#             logging.StreamHandler()
+#         ]
+#     )
+#     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.DEBUG,
@@ -392,4 +341,58 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # ThingSpeak configuration
+    CHANNEL_ID = "2605367"
+    API_KEY = "4LULU5C3YHJSLKU6"
+    
+    data_source = input("Choose data source (1 for existing data, 2 for real-time ThingSpeak data): ")
+    
+    if data_source == "1":
+        app.run(host='0.0.0.0', port=5000, debug=True)
+    elif data_source == "2":
+        print("Starting real-time data processing from ThingSpeak...")
+        last_entry_id = None
+        while True:
+            try:
+                start_time = time.time()
+                logging.info("Attempting to fetch data from ThingSpeak...")
+                thingspeak_data = get_thingspeak_data(CHANNEL_ID, API_KEY)
+                fetch_time = time.time() - start_time
+                
+                if thingspeak_data:
+                    current_entry_id = thingspeak_data.get('entry_id')
+                    if current_entry_id == last_entry_id:
+                        print(f"Received duplicate data (entry_id: {current_entry_id}). Skipping processing.")
+                        time.sleep(15)
+                        continue
+                    
+                    last_entry_id = current_entry_id
+                    logging.info(f"Data fetched successfully in {fetch_time:.2f} seconds")
+                    logging.info("Preprocessing data...")
+                    preprocess_start = time.time()
+                    df_x, df_y = preprocess_thingspeak_data(thingspeak_data)
+                    preprocess_time = time.time() - preprocess_start
+                    
+                    logging.info("Making predictions...")
+                    predict_start = time.time()
+                    predictions = model.predict(df_x)
+                    predict_time = time.time() - predict_start
+                    
+                    total_time = time.time() - start_time
+                    
+                    print(f"Received data: {thingspeak_data}")
+                    print(f"Prediction: {predictions[0][0]}")
+                    print(f"Actual Capacity: {df_y[0]}")
+                    print(f"Processing times - Fetch: {fetch_time:.2f}s, Preprocess: {preprocess_time:.2f}s, Predict: {predict_time:.2f}s, Total: {total_time:.2f}s")
+                else:
+                    logging.warning("Failed to retrieve data from ThingSpeak")
+                
+                remaining_time = max(15 - (time.time() - start_time), 0)
+                print(f"Waiting for {remaining_time:.2f} seconds before next request...")
+                time.sleep(remaining_time)
+            except Exception as e:
+                logging.error(f"Unexpected error in real-time processing: {e}", exc_info=True)
+                time.sleep(20)  # Wait before retrying
+    else:
+        print("Invalid choice. Please run the script again and choose 1 or 2.")
