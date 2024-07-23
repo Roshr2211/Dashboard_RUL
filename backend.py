@@ -343,8 +343,8 @@ if __name__ == "__main__":
     )
     
     # ThingSpeak configuration
-    CHANNEL_ID = "2605367"
-    API_KEY = "4LULU5C3YHJSLKU6"
+    CHANNEL_ID = ""
+    API_KEY = ""
     
     data_source = input("Choose data source (1 for existing data, 2 for real-time ThingSpeak data): ")
     
